@@ -143,7 +143,7 @@
         <status>0x90</status>
         <midino>0x0E</midino>
         <options>
-          <Script-Binding />
+          <normal/>
         </options>
       </control>
       <control>
@@ -163,7 +163,7 @@
         <status>0x91</status>
         <midino>0x0E</midino>
         <options>
-          <Script-Binding />
+          <normal/>
         </options>
       </control>
       <control>

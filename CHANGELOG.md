@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- SHIFT + PLAY (reverseroll / censor) crashed with "ReferenceError:
+  reverseroll is not defined": the XML bound the engine control
+  [ChannelN],reverseroll with Script-Binding, which evaluates the key
+  as JavaScript. Now a direct control binding.
+
 ### Changed
 - BROWSE press now triggers GoToItem (context-aware ENTER: expand/collapse
   tree nodes, open playlists, track double-click action in the track list)
