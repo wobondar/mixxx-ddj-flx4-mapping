@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- BROWSE press now triggers GoToItem (context-aware ENTER: expand/collapse
+  tree nodes, open playlists, track double-click action in the track list)
+- Shift + LOAD (Deck 2) now toggles library focus between tree view and
+  track list (previously: MoveRight / open folder); honors
+  `BROWSE_FOCUS_TOGGLE_ONLY`
+- Shift + BROWSE press now toggles pinned library tree mode via the
+  skin-agnostic `[LibraryUI]` control convention (`tree_pinned`; script
+  computes `tree_visible` = pinned OR tree focused), gated by the new
+  `SKIN_TREE_INTEGRATION` flag
+
 ### Added
 - Smart Fader tap and hold gestures for slip, keylock, and key reset
 - Shift-based stem volume control on EQ knobs

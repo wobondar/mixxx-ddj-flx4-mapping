@@ -39,7 +39,7 @@
         </options>
       </control>
       <control>
-        <description>BROWSE - press - Move cursor between track list and tree view</description>
+        <description>BROWSE - press - GoToItem: expand/collapse tree node, open playlist, or track double-click action</description>
         <group>[Library]</group>
         <key>PioneerDDJFLX4.browsePress</key>
         <status>0x96</status>
@@ -49,7 +49,7 @@
         </options>
       </control>
       <control>
-        <description>BROWSE +SHIFT - press - currently unused</description>
+        <description>BROWSE +SHIFT - press - toggle pinned library tree ([LibraryUI] skin integration)</description>
         <group>[Library]</group>
         <key>PioneerDDJFLX4.browsePress</key>
         <status>0x96</status>
@@ -92,7 +92,7 @@
         </options>
       </control>
       <control>
-        <description>SHIFT + LOAD (DECK2) - press - navigate right / open library folder</description>
+        <description>SHIFT + LOAD (DECK2) - press - toggle focus between tree view and track list</description>
         <group>[Channel2]</group>
         <key>PioneerDDJFLX4.loadShiftPressed</key>
         <status>0x96</status>

@@ -60,12 +60,21 @@ Such a mode does not exist in Mixxx and cannot be emulated reliably.
 
 ### Press
 
-Script-controlled.
+* GoToItem (context-aware ENTER):
 
-Depending on configuration:
+  * tree view, expandable node → toggle expansion
+  * tree view, playlist/crate → jump into its track list
+  * track table → track double-click action (no-op with preference "Ignore")
 
-* default Mixxx focus behavior
-* or toggle between sidebar and track table only
+## Shift + Browse press
+
+* Toggle pinned library tree mode (`[LibraryUI],tree_pinned`)
+
+  Skin integration via the `[LibraryUI]` control convention (first
+  implementer: the Daedalus skin), gated by `SKIN_TREE_INTEGRATION`.
+  Pinned: tree always visible. Unpinned: tree only shows while it has
+  library focus and auto-folds when focus moves to the track list.
+  Harmless with non-implementing skins.
 
 ## Shift + Browse rotate
 
@@ -83,7 +92,10 @@ Depending on configuration:
 ### Shift + LOAD
 
 * Deck 1 → toggle library maximize
-* Deck 2 → navigate / open folder
+* Deck 2 → toggle focus between tree view and track table
+
+  Script-controlled. With `BROWSE_FOCUS_TOGGLE_ONLY = false` it falls
+  back to default Mixxx focus cycling instead.
 
 ---
 
@@ -533,6 +545,7 @@ All LEDs are script-driven and follow Mixxx engine state.
 Examples:
 
 * `BROWSE_FOCUS_TOGGLE_ONLY`
+* `SKIN_TREE_INTEGRATION`
 * `SAMPLER_LONGPRESS_MS`
 * `QUANTIZE_LONGPRESS_MS`
 * `LOOP_ADJUST_MODE`

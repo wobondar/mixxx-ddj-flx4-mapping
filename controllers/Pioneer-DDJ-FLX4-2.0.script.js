@@ -192,12 +192,22 @@ PioneerDDJFLX4.lights = {
 // -----------------------------------------------------------------------------
 //
 
-// Library focus behaviour for the BROWSE button.
+// Library focus behaviour for SHIFT + LOAD (Deck 2).
 //
 // false → default Mixxx behaviour (cycles through all library widgets)
 // true  → toggle only between sidebar (tree view) and tracklist
 //
 PioneerDDJFLX4.BROWSE_FOCUS_TOGGLE_ONLY = true;
+
+// Skin tree integration.
+//
+// true  → SHIFT + BROWSE press toggles [LibraryUI],tree_pinned and the
+//         script computes [LibraryUI],tree_visible = (pinned OR library
+//         focus in the tree). Skins may bind their library tree
+//         visibility to these controls (first implementer: Daedalus).
+// false → no skin integration; SHIFT + BROWSE press stays reserved.
+//
+PioneerDDJFLX4.SKIN_TREE_INTEGRATION = true;
 
 // Time threshold (milliseconds) to detect long press on sampler pads.
 //
@@ -667,6 +677,13 @@ for (let i = 1; i <= samplerCount; ++i) {
     engine.makeConnection("[Channel1]", "loop_enabled", PioneerDDJFLX4.loopToggle);
     engine.makeConnection("[Channel2]", "loop_enabled", PioneerDDJFLX4.loopToggle);
 
+    // Skin tree integration: tree visibility = pinned OR tree focused
+    if (PioneerDDJFLX4.SKIN_TREE_INTEGRATION) {
+        engine.makeConnection("[Library]", "focused_widget", PioneerDDJFLX4.updateSkinTreeVisible);
+        engine.makeConnection("[LibraryUI]", "tree_pinned", PioneerDDJFLX4.updateSkinTreeVisible);
+        PioneerDDJFLX4.updateSkinTreeVisible();
+    }
+
     engine.makeConnection("[Channel1]", "track_loaded", PioneerDDJFLX4.loopTrackLoaded);
     engine.makeConnection("[Channel2]", "track_loaded", PioneerDDJFLX4.loopTrackLoaded);
 
@@ -775,42 +792,61 @@ PioneerDDJFLX4.padMode["[Channel2]"] = PioneerDDJFLX4.PADMODE.HOTCUE;
 //
 // Library / Browser: BROWSE press handling
 // 0x41 = BROWSE
-// 0x42 = SHIFT + BROWSE (currently unused)
+// 0x42 = SHIFT + BROWSE (toggle pinned tree mode, skin integration)
 //
 // behaviour:
-// - simple mode: MoveFocusForward
-// - toggle mode: only switch between Tree view and Tracks table
+// - BROWSE press: GoToItem, Mixxx's context-aware ENTER:
+//   tree view on an expandable node → toggle expansion,
+//   tree view on a leaf (playlist/crate) → jump into its tracklist,
+//   tracks table → track double-click action (no-op with pref "Ignore")
+// - SHIFT + BROWSE press: toggle [LibraryUI],tree_pinned (if enabled)
 //
 
 PioneerDDJFLX4.browsePress = function(_channel, control, value, _status, _group) {
     if (value !== 0x7F) return;
 
-    // SHIFT+BROWSE currently unused
-    if (control === 0x42) return;
+    // SHIFT+BROWSE → toggle pinned tree mode (skin integration)
+    if (control === 0x42) {
+        if (PioneerDDJFLX4.SKIN_TREE_INTEGRATION) {
+            script.toggleControl("[LibraryUI]", "tree_pinned");
+        }
+        return;
+    }
     if (control !== 0x41) return;
 
-    if (PioneerDDJFLX4.BROWSE_FOCUS_TOGGLE_ONLY) {
-        const focus = engine.getValue("[Library]", "focused_widget");
+    script.triggerControl("[Library]", "GoToItem");
+};
 
-        // 3 = Tracks table -> go to Tree view
-        if (focus === 3) {
-            engine.setValue("[Library]", "focused_widget", 2);
-            return;
-        }
-
-        // 2 = Tree view -> go to Tracks table
-        if (focus === 2) {
-            engine.setValue("[Library]", "focused_widget", 3);
-            return;
-        }
-
-        // Search bar / none / anything else -> force Tracks table
-        engine.setValue("[Library]", "focused_widget", 3);
+//
+// Focus toggle between tree view and tracks table.
+// Used by SHIFT + LOAD (Deck 2); honors BROWSE_FOCUS_TOGGLE_ONLY.
+//
+PioneerDDJFLX4.toggleLibraryTreeFocus = function() {
+    if (!PioneerDDJFLX4.BROWSE_FOCUS_TOGGLE_ONLY) {
+        // Default Mixxx behaviour
+        script.triggerControl("[Library]", "MoveFocusForward");
         return;
     }
 
-    // Default behaviour
-    script.triggerControl("[Library]", "MoveFocusForward");
+    const focus = engine.getValue("[Library]", "focused_widget");
+
+    // 3 = Tracks table -> go to Tree view
+    // 2 = Tree view -> go to Tracks table
+    // Search bar / none / anything else -> force Tracks table
+    engine.setValue("[Library]", "focused_widget", focus === 3 ? 2 : 3);
+};
+
+//
+// Skin tree integration ([LibraryUI] convention): computed visibility.
+// A skin shows the library tree while [LibraryUI],tree_visible is 1;
+// this keeps it at (tree_pinned OR focus in the tree). Pinned: tree
+// always shown. Unpinned: tree auto-folds when focus leaves it.
+// Gated by SKIN_TREE_INTEGRATION; harmless with non-implementing skins.
+//
+PioneerDDJFLX4.updateSkinTreeVisible = function() {
+    const pinned = engine.getValue("[LibraryUI]", "tree_pinned") > 0;
+    const inTree = engine.getValue("[Library]", "focused_widget") === 2;
+    engine.setValue("[LibraryUI]", "tree_visible", (pinned || inTree) ? 1 : 0);
 };
 
 //
@@ -1004,7 +1040,7 @@ PioneerDDJFLX4.loadPressed = function(_channel, _control, value, _status, group)
 //   Useful to quickly switch between full library view and normal layout.
 //
 // Deck 2 (0x7A):
-//   Open folder / expand tree in library (MoveRight).
+//   Toggle library focus between tree view and tracklist.
 //
 
 PioneerDDJFLX4.loadShiftPressed = function(_channel, control, value, _status, _group) {
@@ -1016,9 +1052,9 @@ PioneerDDJFLX4.loadShiftPressed = function(_channel, control, value, _status, _g
         return;
     }
 
-    // SHIFT + LOAD right → open folder in library tree
+    // SHIFT + LOAD right → toggle focus between tree view and tracklist
     if (control === 0x7A) {
-        script.triggerControl("[Library]", "MoveRight");
+        PioneerDDJFLX4.toggleLibraryTreeFocus();
     }
 };
 
